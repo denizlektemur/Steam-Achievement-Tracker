@@ -1,0 +1,13 @@
+package com.denizlektemur.steamachievementtracker;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class SteamachievementtrackerApplication {
+
+	public static void main(String[] args) {
+		SpringApplication.run(SteamachievementtrackerApplication.class, args);
+	}
+
+}
