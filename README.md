@@ -15,7 +15,7 @@ A project used to track missing or already obtained achievements in a given stea
 | `GET`     | `/api/users`                 | Returns all users                        |
 | `GET`     | `/api/users/{id}`            | Returns the user with the given id       |
 | `GET`     | `/api/users/steam/{steamId}` | Returns the user with the given Steam id |
-| `POST`    | `/api/users'                 | Creates a new user                       |
+| `POST`    | `/api/users`                 | Creates a new user                       |
 | `DELETE`  | `/api/users/{id}`            | Deletes the user with the given id       |
 
 ### Games
