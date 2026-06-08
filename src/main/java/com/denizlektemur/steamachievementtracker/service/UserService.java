@@ -1,8 +1,9 @@
 package com.denizlektemur.steamachievementtracker.service;
 
+import com.denizlektemur.steamachievementtracker.exception.DuplicateResourceException;
+import com.denizlektemur.steamachievementtracker.exception.ResourceNotFoundException;
 import com.denizlektemur.steamachievementtracker.model.User;
 import com.denizlektemur.steamachievementtracker.repository.UserRepository;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -20,24 +21,24 @@ public class UserService {
 
     public User getUserById(Long id) {
         return userRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
     }
 
     public User getUserBySteamId(String steamId) {
         return userRepository.findBySteamId(steamId)
-                .orElseThrow(() -> new EntityNotFoundException("User not found with steamId: " + steamId));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with steamId: " + steamId));
     }
 
     public User createUser(User user) {
         if (userRepository.existsBySteamId(user.getSteamId())) {
-            throw new IllegalArgumentException("User already exists with steamId: " + user.getSteamId());
+            throw new DuplicateResourceException("User already exists with steamId: " + user.getSteamId());
         }
         return userRepository.save(user);
     }
 
     public void deleteUser(Long id) {
         if (!userRepository.existsById(id)) {
-            throw new EntityNotFoundException("User not found with id: " + id);
+            throw new ResourceNotFoundException("User not found with id: " + id);
         }
         userRepository.deleteById(id);
     }

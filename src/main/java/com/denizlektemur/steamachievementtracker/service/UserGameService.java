@@ -1,8 +1,9 @@
 package com.denizlektemur.steamachievementtracker.service;
 
+import com.denizlektemur.steamachievementtracker.exception.DuplicateResourceException;
+import com.denizlektemur.steamachievementtracker.exception.ResourceNotFoundException;
 import com.denizlektemur.steamachievementtracker.model.*;
 import com.denizlektemur.steamachievementtracker.repository.*;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -26,12 +27,12 @@ public class UserGameService {
 
     public UserGame addGameToUser(Long userId, Long gameId, GameStatus status) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + userId));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
         Game game = gameRepository.findById(gameId)
-                .orElseThrow(() -> new EntityNotFoundException("Game not found with id: " + gameId));
+                .orElseThrow(() -> new ResourceNotFoundException("Game not found with id: " + gameId));
 
         if (userGameRepository.existsByUserIdAndGameId(userId, gameId)) {
-            throw new IllegalArgumentException("Game already added to user's library");
+            throw new DuplicateResourceException("Game already added to user's library");
         }
 
         UserGame userGame = UserGame.builder()
@@ -45,7 +46,7 @@ public class UserGameService {
 
     public UserGame updateStatus(Long userId, Long gameId, GameStatus newStatus) {
         UserGame userGame = userGameRepository.findByUserIdAndGameId(userId, gameId)
-                .orElseThrow(() -> new EntityNotFoundException("No library entry found for this user and game"));
+                .orElseThrow(() -> new ResourceNotFoundException("No library entry found for this user and game"));
 
         userGame.setStatus(newStatus);
         return userGameRepository.save(userGame);
@@ -53,7 +54,7 @@ public class UserGameService {
 
     public void removeGameFromUser(Long userId, Long gameId) {
         UserGame userGame = userGameRepository.findByUserIdAndGameId(userId, gameId)
-                .orElseThrow(() -> new EntityNotFoundException("No library entry found for this user and game"));
+                .orElseThrow(() -> new ResourceNotFoundException("No library entry found for this user and game"));
 
         userGameRepository.delete(userGame);
     }

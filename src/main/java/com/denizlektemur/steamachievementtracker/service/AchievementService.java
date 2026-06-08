@@ -1,9 +1,9 @@
 package com.denizlektemur.steamachievementtracker.service;
 
+import com.denizlektemur.steamachievementtracker.exception.ResourceNotFoundException;
 import com.denizlektemur.steamachievementtracker.model.Achievement;
 import com.denizlektemur.steamachievementtracker.repository.AchievementRepository;
 import com.denizlektemur.steamachievementtracker.repository.GameRepository;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -18,14 +18,14 @@ public class AchievementService {
 
     public List<Achievement> getAchievementsByGame(Long gameId) {
         if (!gameRepository.existsById(gameId)) {
-            throw new EntityNotFoundException("Game not found with id: " + gameId);
+            throw new ResourceNotFoundException("Game not found with id: " + gameId);
         }
         return achievementRepository.findByGameId(gameId);
     }
 
     public Achievement getAchievementById(Long id) {
         return achievementRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Achievement not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Achievement not found with id: " + id));
     }
 
     public int countByGame(Long gameId) {
