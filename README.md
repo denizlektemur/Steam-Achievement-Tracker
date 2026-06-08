@@ -51,3 +51,9 @@ A project used to track missing or already obtained achievements in a given stea
 | ``POST``   | ``/api/users/{userId}/achievements/{achievementId}/unlock``  | Marks an achievement as unlocked for the user             |
 | ``DELETE`` | ``/api/users/{userId}/achievements/{achievementId}``         | Removes an achievement for the user                       |
 
+### Steam API Sync
+| Type     | Command                                                  | Description                                    |
+|----------|----------------------------------------------------------|------------------------------------------------|
+| ``POST`` | ``/api/sync/users/{userId}/games``                       | Syncs all games for a given user               |
+| ``POST`` | ``/api/sync/users/{userId}/games/{gameId}/achievements`` | Syncs all achievements for given game and user |
+
