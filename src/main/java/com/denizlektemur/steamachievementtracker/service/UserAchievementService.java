@@ -18,7 +18,6 @@ public class UserAchievementService {
     private final UserAchievementRepository userAchievementRepository;
     private final UserRepository userRepository;
     private final AchievementRepository achievementRepository;
-    private final GameRepository gameRepository;
 
     public List<UserAchievement> getByUser(Long userId) {
         if (!userRepository.existsById(userId)) {
