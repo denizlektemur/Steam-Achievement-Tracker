@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { syncAll } from '../api/api'
+import { syncAll, USER_ID } from '../api/api'
 import { useState } from 'react'
 import './Navbar.css'
 

@@ -208,3 +208,30 @@
     color: #8ba7b8;
     text-align: center;
 }
+
+.filter-buttons {
+    display: flex;
+    gap: 0.3rem;
+}
+
+.filter-btn {
+    background-color: #2a475e;
+    color: #8ba7b8;
+    padding: 0.5rem 1rem;
+    border-radius: 3px;
+    font-size: 0.8rem;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.filter-btn:hover {
+    background-color: #4c6b8a;
+    color: #c6d4df;
+}
+
+.filter-btn.active {
+    border-color: #66c0f4;
+    color: #66c0f4;
+    background-color: #1b2838;
+}

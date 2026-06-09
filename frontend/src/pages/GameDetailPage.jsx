@@ -76,11 +76,16 @@ export default function GameDetailPage() {
 
     const unlockedIds = new Set(achievements.map(ua => ua.achievement?.id))
 
-    const filteredAchievements = achievements.filter(ua => {
-        const name = ua.achievement?.displayName || ua.achievement?.apiName || ''
-        const matchesSearch = name.toLowerCase().includes(search.toLowerCase())
-        return matchesSearch
-    })
+    const filteredAchievements = achievements
+        .filter(ua => {
+            if (filter === 'unlocked') return ua.unlockedAt !== null
+            if (filter === 'locked') return ua.unlockedAt === null
+            return true
+        })
+        .filter(ua => {
+            const name = ua.achievement?.displayName || ua.achievement?.apiName || ''
+            return name.toLowerCase().includes(search.toLowerCase())
+        })
 
     if (loading) return <div className="loading">Loading...</div>
 
@@ -127,6 +132,26 @@ export default function GameDetailPage() {
                     value={search}
                     onChange={e => setSearch(e.target.value)}
                 />
+                <div className="filter-buttons">
+                    <button
+                        className={`filter-btn ${filter === 'all' ? 'active' : ''}`}
+                        onClick={() => setFilter('all')}
+                    >
+                        All
+                    </button>
+                    <button
+                        className={`filter-btn ${filter === 'unlocked' ? 'active' : ''}`}
+                        onClick={() => setFilter('unlocked')}
+                    >
+                        Unlocked
+                    </button>
+                    <button
+                        className={`filter-btn ${filter === 'locked' ? 'active' : ''}`}
+                        onClick={() => setFilter('locked')}
+                    >
+                        Locked
+                    </button>
+                </div>
                 <button className="sync-btn" onClick={handleSync} disabled={syncing}>
                     {syncing ? 'Syncing...' : 'Sync Achievements'}
                 </button>

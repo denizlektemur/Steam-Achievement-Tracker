@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 const BASE_URL = '/api'
-const USER_ID = 9  // change this to your actual user ID
+export const USER_ID = 9  // change this to your actual user ID
 
 export const getUser = () =>
     axios.get(`${BASE_URL}/users/${USER_ID}`)
