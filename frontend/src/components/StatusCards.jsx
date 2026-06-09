@@ -8,7 +8,7 @@ const STATUSES = [
     { label: 'Ignored', value: 'IGNORED' },
 ]
 
-export default function StatusCards({ active, onSelect, counts }) {
+export default function StatusCards({ active, onSelect, counts, showProgress, onToggleProgress }) {
     return (
         <div className="status-cards">
             {STATUSES.map(s => (
@@ -21,6 +21,12 @@ export default function StatusCards({ active, onSelect, counts }) {
                     <span className="status-count">( {counts[s.value] ?? 0} )</span>
                 </button>
             ))}
+            <button
+                className={`toggle-btn ${showProgress ? 'active' : ''}`}
+                onClick={onToggleProgress}
+            >
+                {showProgress ? '🎯 Hide Progress' : '🎯 Show Progress'}
+            </button>
         </div>
     )
 }

@@ -1,5 +1,6 @@
 package com.denizlektemur.steamachievementtracker.service;
 
+import com.denizlektemur.steamachievementtracker.dto.UserGameDto;
 import com.denizlektemur.steamachievementtracker.exception.DuplicateResourceException;
 import com.denizlektemur.steamachievementtracker.exception.ResourceNotFoundException;
 import com.denizlektemur.steamachievementtracker.model.*;
@@ -16,6 +17,8 @@ public class UserGameService {
     private final UserGameRepository userGameRepository;
     private final UserRepository userRepository;
     private final GameRepository gameRepository;
+    private final AchievementRepository achievementRepository;
+    private final UserAchievementRepository userAchievementRepository;
 
     public List<UserGame> getGamesByUser(Long userId) {
         return userGameRepository.findByUserId(userId);
@@ -63,5 +66,49 @@ public class UserGameService {
         return userGameRepository.findByUserIdAndGameId(userId, gameId)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "No library entry found for this user and game"));
+    }
+
+    public List<UserGameDto> getGamesWithProgress(Long userId) {
+        return userGameRepository.findByUserId(userId).stream()
+                .map(ug -> {
+                    int total = achievementRepository.countByGameId(ug.getGame().getId());
+                    int unlocked = userAchievementRepository
+                            .countByUserIdAndGameId(userId, ug.getGame().getId());
+                    return new UserGameDto(
+                            ug.getId(),
+                            ug.getGame().getId(),
+                            ug.getGame().getAppId(),
+                            ug.getGame().getTitle(),
+                            ug.getGame().getHeaderImageUrl(),
+                            ug.getStatus(),
+                            total,
+                            unlocked,
+                            ug.getLastPlayedAt(),
+                            ug.getAddedAt()
+                    );
+                })
+                .toList();
+    }
+
+    public List<UserGameDto> getGamesWithProgressByStatus(Long userId, GameStatus status) {
+        return userGameRepository.findByUserIdAndStatus(userId, status).stream()
+                .map(ug -> {
+                    int total = achievementRepository.countByGameId(ug.getGame().getId());
+                    int unlocked = userAchievementRepository
+                            .countByUserIdAndGameId(userId, ug.getGame().getId());
+                    return new UserGameDto(
+                            ug.getId(),
+                            ug.getGame().getId(),
+                            ug.getGame().getAppId(),
+                            ug.getGame().getTitle(),
+                            ug.getGame().getHeaderImageUrl(),
+                            ug.getStatus(),
+                            total,
+                            unlocked,
+                            ug.getLastPlayedAt(),
+                            ug.getAddedAt()
+                    );
+                })
+                .toList();
     }
 }

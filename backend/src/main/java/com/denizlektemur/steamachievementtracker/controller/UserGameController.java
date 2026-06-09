@@ -1,5 +1,6 @@
 package com.denizlektemur.steamachievementtracker.controller;
 
+import com.denizlektemur.steamachievementtracker.dto.UserGameDto;
 import com.denizlektemur.steamachievementtracker.model.GameStatus;
 import com.denizlektemur.steamachievementtracker.model.UserGame;
 import com.denizlektemur.steamachievementtracker.service.UserGameService;
@@ -18,15 +19,15 @@ public class UserGameController {
     private final UserGameService userGameService;
 
     @GetMapping
-    public List<UserGame> getUserGames(@PathVariable Long userId) {
-        return userGameService.getGamesByUser(userId);
+    public List<UserGameDto> getUserGames(@PathVariable Long userId) {
+        return userGameService.getGamesWithProgress(userId);
     }
 
     @GetMapping("/status/{status}")
-    public List<UserGame> getUserGamesByStatus(
+    public List<UserGameDto> getUserGamesByStatus(
             @PathVariable Long userId,
             @PathVariable GameStatus status) {
-        return userGameService.getGamesByUserAndStatus(userId, status);
+        return userGameService.getGamesWithProgressByStatus(userId, status);
     }
 
     @PostMapping("/{gameId}")
