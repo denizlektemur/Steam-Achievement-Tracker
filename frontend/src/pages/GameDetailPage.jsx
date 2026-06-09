@@ -86,11 +86,14 @@ export default function GameDetailPage() {
 
     const game = userGame?.game
     const headerImage = `https://cdn.cloudflare.steamstatic.com/steam/apps/${game?.appId}/header.jpg`
+    const heroStyle = {
+        backgroundImage: `url(${headerImage}), linear-gradient(135deg, #1b2838 0%, #2a475e 100%)`
+    }
 
     return (
         <div className="detail-page">
             {/* Game Hero Banner */}
-            <div className="game-hero" style={{ backgroundImage: `url(${headerImage})` }}>
+            <div className="game-hero" style={heroStyle}>
                 <div className="game-hero-overlay">
                     <button className="back-btn" onClick={() => navigate('/')}>← Back</button>
                     <div className="game-hero-info">
