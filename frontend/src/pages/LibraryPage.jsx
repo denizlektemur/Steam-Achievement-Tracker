@@ -1,16 +1,57 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { getUserGames, getUserGamesByStatus } from '../api/api'
 import StatusCards from '../components/StatusCards'
 import GameGrid from '../components/GameGrid'
 import './LibraryPage.css'
 
+const SORT_OPTIONS = [
+    { value: 'title', label: 'Name' },
+    { value: 'percentage', label: 'Completion %' },
+    { value: 'lastPlayedAt', label: 'Last Played' },
+]
+
+function sortGames(games, sortBy, sortDir) {
+    return [...games].sort((a, b) => {
+        let aVal, bVal
+
+        if (sortBy === 'title') {
+            aVal = a.title.toLowerCase()
+            bVal = b.title.toLowerCase()
+            return sortDir === 'asc'
+                ? aVal.localeCompare(bVal)
+                : bVal.localeCompare(aVal)
+        }
+
+        if (sortBy === 'percentage') {
+            aVal = a.totalAchievements > 0
+                ? a.unlockedAchievements / a.totalAchievements
+                : -1
+            bVal = b.totalAchievements > 0
+                ? b.unlockedAchievements / b.totalAchievements
+                : -1
+        }
+
+        if (sortBy === 'lastPlayedAt') {
+            aVal = a.lastPlayedAt ? new Date(a.lastPlayedAt).getTime() : 0
+            bVal = b.lastPlayedAt ? new Date(b.lastPlayedAt).getTime() : 0
+        }
+
+        return sortDir === 'asc' ? aVal - bVal : bVal - aVal
+    })
+}
+
 export default function LibraryPage() {
+    // ← all hooks must be here, inside the function
     const [allGames, setAllGames] = useState([])
     const [filtered, setFiltered] = useState([])
     const [activeStatus, setActiveStatus] = useState(null)
     const [loading, setLoading] = useState(true)
     const [showProgress, setShowProgress] = useState(true)
     const [search, setSearch] = useState('')
+    const [sortBy, setSortBy] = useState('title')
+    const [sortDir, setSortDir] = useState('asc')
+    const [sortOpen, setSortOpen] = useState(false)
+    const sortRef = useRef(null)  // ← must be inside here
 
     useEffect(() => {
         getUserGames().then(res => {
@@ -20,15 +61,31 @@ export default function LibraryPage() {
         })
     }, [])
 
+    useEffect(() => {
+        setFiltered(prev => sortGames(prev, sortBy, sortDir))
+    }, [sortBy, sortDir])
+
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (sortRef.current && !sortRef.current.contains(e.target)) {
+                setSortOpen(false)
+            }
+        }
+        document.addEventListener('mousedown', handleClickOutside)
+        return () => document.removeEventListener('mousedown', handleClickOutside)
+    }, [])
+
     const handleStatusSelect = async (status) => {
         setActiveStatus(status)
         setSearch('')
+        let base
         if (status === null) {
-            setFiltered(allGames)
+            base = allGames
         } else {
             const res = await getUserGamesByStatus(status)
-            setFiltered(res.data)
+            base = res.data
         }
+        setFiltered(sortGames(base, sortBy, sortDir))
     }
 
     const handleSearch = (e) => {
@@ -37,10 +94,13 @@ export default function LibraryPage() {
         const base = activeStatus === null
             ? allGames
             : allGames.filter(g => g.status === activeStatus)
-        setFiltered(
-            base.filter(g => g.title.toLowerCase().includes(value.toLowerCase()))
+        const searched = base.filter(g =>
+            g.title.toLowerCase().includes(value.toLowerCase())
         )
+        setFiltered(sortGames(searched, sortBy, sortDir))
     }
+
+    const currentSortLabel = SORT_OPTIONS.find(o => o.value === sortBy)?.label
 
     const counts = {
         null: allGames.length,
@@ -73,6 +133,41 @@ export default function LibraryPage() {
             {filtered.length} result{filtered.length !== 1 ? 's' : ''}
           </span>
                 )}
+                <div className="sort-split" ref={sortRef}>
+                    <button
+                        className={`sort-type-btn ${sortOpen ? 'open' : ''}`}
+                        onClick={() => setSortOpen(o => !o)}
+                    >
+                        Sort: {currentSortLabel}
+                    </button>
+                    <button
+                        className="sort-dir-btn"
+                        onClick={() => setSortDir(d => d === 'asc' ? 'desc' : 'asc')}
+                    >
+                        {sortDir === 'asc' ? '↑' : '↓'}
+                    </button>
+                    {sortOpen && (
+                        <div className="sort-menu">
+                            {SORT_OPTIONS.map(o => (
+                                <button
+                                    key={o.value}
+                                    className={`sort-option ${sortBy === o.value ? 'active' : ''}`}
+                                    onClick={() => {
+                                        setSortBy(o.value)
+                                        setSortOpen(false)
+                                    }}
+                                >
+                                    {o.label}
+                                    {sortBy === o.value && (
+                                        <span className="sort-dir-indicator">
+                      {sortDir === 'asc' ? '↑' : '↓'}
+                    </span>
+                                    )}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+                </div>
             </div>
             <GameGrid games={filtered} showProgress={showProgress} />
         </div>

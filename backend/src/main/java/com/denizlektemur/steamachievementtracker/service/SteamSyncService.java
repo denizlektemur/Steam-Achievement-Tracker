@@ -58,14 +58,31 @@ public class SteamSyncService {
 
             // Add to user library if not already there
             if (!userGameRepository.existsByUserIdAndGameId(userId, game.getId())) {
-                userGameRepository.save(
-                        UserGame.builder()
-                                .user(user)
-                                .game(game)
-                                .status(GameStatus.BACKLOG)
-                                .build()
-                );
+                UserGame userGame = UserGame.builder()
+                        .user(user)
+                        .game(game)
+                        .status(GameStatus.BACKLOG)
+                        .build();
+
+                if (dto.lastPlayedTimestamp() != null && dto.lastPlayedTimestamp() > 0) {
+                    userGame.setLastPlayedAt(LocalDateTime.ofInstant(
+                            Instant.ofEpochSecond(dto.lastPlayedTimestamp()),
+                            ZoneId.systemDefault()));
+                }
+
+                userGameRepository.save(userGame);
                 synced++;
+            } else {
+                // Update last played even if game already exists
+                userGameRepository.findByUserIdAndGameId(userId, game.getId())
+                        .ifPresent(ug -> {
+                            if (dto.lastPlayedTimestamp() != null && dto.lastPlayedTimestamp() > 0) {
+                                ug.setLastPlayedAt(LocalDateTime.ofInstant(
+                                        Instant.ofEpochSecond(dto.lastPlayedTimestamp()),
+                                        ZoneId.systemDefault()));
+                                userGameRepository.save(ug);
+                            }
+                        });
             }
         }
 
@@ -153,7 +170,7 @@ public class SteamSyncService {
         log.info("Synced {} new unlocks for {} in {}", synced, user.getUsername(), game.getTitle());
         return synced;
     }
-    
+
     public SyncResult syncAll(Long userId) {
         log.info("Starting full sync for user {}", userId);
 
