@@ -100,15 +100,19 @@ export default function GameDetailPage() {
             {/* Game Hero Banner */}
             <div className="game-hero" style={heroStyle}>
                 <div className="game-hero-overlay">
-                    <button className="back-btn" onClick={() => navigate('/')}>← Back</button>
+                    <div className="game-hero-top">
+                        <button className="back-btn" onClick={() => navigate('/')}>
+                            ← Back to Library
+                        </button>
+                    </div>
                     <div className="game-hero-info">
                         <h1 className="game-hero-title">{game?.title}</h1>
                         <span
                             className="game-hero-status"
                             style={{ color: STATUS_COLORS[userGame?.status] }}
                         >
-              {userGame?.status?.replace('_', ' ')}
-            </span>
+                        {userGame?.status?.replace('_', ' ')}
+                         </span>
                     </div>
                 </div>
             </div>

@@ -43,15 +43,25 @@
 }
 
 .back-btn {
-    color: #66c0f4;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: #8ba7b8;
     font-size: 0.85rem;
     cursor: pointer;
-    background: none;
-    border: none;
-    align-self: flex-start;
+    background-color: #2a475e;
+    border: 1px solid transparent;
+    border-radius: 3px;
+    padding: 0.4rem 1rem;
+    transition: all 0.2s;
+    margin-bottom: 0;
 }
 
-.back-btn:hover { text-decoration: underline; }
+.back-btn:hover {
+    background-color: #4c6b8a;
+    color: #c6d4df;
+    border-color: #4c6b8a;
+}
 
 /* Progress */
 .progress-section {
