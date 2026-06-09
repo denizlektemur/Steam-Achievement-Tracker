@@ -26,3 +26,6 @@ export const getAchievements = (gameId) =>
 
 export const getProgress = (gameId) =>
     axios.get(`${BASE_URL}/users/${USER_ID}/games/${gameId}/achievements/progress`)
+
+export const syncAll = (userId) =>
+    axios.post(`${BASE_URL}/sync/users/${userId}/all`)

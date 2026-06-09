@@ -10,11 +10,15 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 @Slf4j
 @Service
@@ -27,6 +31,9 @@ public class SteamSyncService {
     private final UserGameRepository userGameRepository;
     private final AchievementRepository achievementRepository;
     private final UserAchievementRepository userAchievementRepository;
+
+    @Value("${sync.thread-pool-size:10}")
+    private int threadPoolSize;
 
     @Transactional
     public int syncGames(Long userId) {
@@ -121,4 +128,42 @@ public class SteamSyncService {
         log.info("Synced {} new unlocks for {} in {}", synced, user.getUsername(), game.getTitle());
         return synced;
     }
+
+    public SyncResult syncAll(Long userId) {
+        log.info("Starting full sync for user {}", userId);
+
+        int newGames = syncGames(userId);
+        int totalNewUnlocks;
+
+        List<UserGame> userGames = userGameRepository.findByUserId(userId);
+
+        try (ExecutorService executor = Executors.newFixedThreadPool(threadPoolSize)) {
+
+        List<CompletableFuture<Integer>> futures = userGames.stream()
+                .map(userGame -> CompletableFuture.supplyAsync(() -> {
+                    try {
+                        return syncAchievements(userId, userGame.getGame().getId());
+                    } catch (Exception e) {
+                        log.warn("Skipping {}: {}", userGame.getGame().getTitle(), e.getMessage());
+                        return 0;
+                    }
+                }, executor))
+                .toList();
+
+        totalNewUnlocks = futures.stream()
+                .mapToInt(f -> {
+                    try {
+                        return f.join();
+                    } catch (Exception e) {
+                        return 0;
+                    }
+                })
+                .sum();
+        }
+
+        log.info("Full sync complete — {} new games, {} new unlocks", newGames, totalNewUnlocks);
+        return new SyncResult(newGames, totalNewUnlocks);
+    }
+
+    public record SyncResult(int newGames, int newUnlocks) {}
 }

@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { syncGames } from '../api/api'
+import { syncAll } from '../api/api'
 import { useState } from 'react'
 import './Navbar.css'
 
@@ -9,8 +9,8 @@ export default function Navbar() {
     const handleSync = async () => {
         setSyncing(true)
         try {
-            const res = await syncGames()
-            alert(`Sync complete — ${res.data.newGamesAdded} new games added`)
+            const res = await syncAll(USER_ID)
+            alert(`Sync complete — ${res.data.newGamesAdded} new games, ${res.data.newUnlocksRecorded} new unlocks`)
         } catch (e) {
             alert('Sync failed')
         } finally {

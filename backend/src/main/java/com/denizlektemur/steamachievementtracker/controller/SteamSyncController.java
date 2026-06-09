@@ -33,4 +33,14 @@ public class SteamSyncController {
                 "newUnlocksRecorded", count
         ));
     }
+
+    @PostMapping("/users/{userId}/all")
+    public ResponseEntity<Map<String, Object>> syncAll(@PathVariable Long userId) {
+        SteamSyncService.SyncResult result = steamSyncService.syncAll(userId);
+        return ResponseEntity.ok(Map.of(
+                "message", "Full sync complete",
+                "newGamesAdded", result.newGames(),
+                "newUnlocksRecorded", result.newUnlocks()
+        ));
+    }
 }
