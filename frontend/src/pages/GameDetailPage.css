@@ -1,0 +1,110 @@
+.detail-page {
+    padding: 2rem;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.back-btn {
+    color: #66c0f4;
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+    display: inline-block;
+    cursor: pointer;
+    background: none;
+    border: none;
+}
+
+.back-btn:hover { text-decoration: underline; }
+
+.detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 2rem;
+    gap: 1rem;
+}
+
+.progress-section h2 {
+    font-size: 1.4rem;
+    color: #c6d4df;
+    margin-bottom: 0.5rem;
+}
+
+.progress-text {
+    color: #8ba7b8;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
+.progress-bar-bg {
+    width: 300px;
+    height: 8px;
+    background-color: #2a475e;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    background-color: #4caf7d;
+    border-radius: 4px;
+    transition: width 0.4s ease;
+}
+
+.progress-pct {
+    font-size: 0.85rem;
+    color: #4caf7d;
+    margin-top: 0.3rem;
+}
+
+.sync-btn {
+    background-color: #2a475e;
+    color: #c6d4df;
+    padding: 0.5rem 1.2rem;
+    border-radius: 3px;
+    font-size: 0.85rem;
+    transition: background 0.2s;
+    border: none;
+    cursor: pointer;
+}
+
+.sync-btn:hover:not(:disabled) { background-color: #4c6b8a; }
+.sync-btn:disabled { opacity: 0.5; }
+
+.achievement-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.achievement-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #2a475e;
+    padding: 0.8rem 1rem;
+    border-radius: 4px;
+}
+
+.achievement-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.achievement-name {
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: #c6d4df;
+}
+
+.achievement-desc {
+    font-size: 0.8rem;
+    color: #8ba7b8;
+}
+
+.achievement-unlocked {
+    font-size: 0.8rem;
+    color: #4caf7d;
+    white-space: nowrap;
+}

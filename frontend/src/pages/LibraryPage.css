@@ -1,0 +1,7 @@
+.loading {
+    display: flex;
+    justify-content: center;
+    padding: 4rem;
+    color: #8ba7b8;
+    font-size: 1.1rem;
+}

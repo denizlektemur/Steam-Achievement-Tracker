@@ -1,0 +1,36 @@
+.navbar {
+    background-color: #171a21;
+    padding: 0 2rem;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    border-bottom: 1px solid #2a475e;
+}
+
+.navbar-brand {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #c6d4df;
+    letter-spacing: 1px;
+}
+
+.sync-btn {
+    background-color: #2a475e;
+    color: #c6d4df;
+    padding: 0.5rem 1.2rem;
+    border-radius: 3px;
+    font-size: 0.85rem;
+    transition: background 0.2s;
+}
+
+.sync-btn:hover:not(:disabled) {
+    background-color: #4c6b8a;
+}
+
+.sync-btn:disabled {
+    opacity: 0.5;
+}

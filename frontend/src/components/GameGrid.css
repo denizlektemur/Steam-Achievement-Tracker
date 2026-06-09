@@ -1,0 +1,12 @@
+.game-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 1rem;
+    padding: 0 2rem 2rem;
+}
+
+.empty {
+    padding: 2rem;
+    color: #8ba7b8;
+    text-align: center;
+}
