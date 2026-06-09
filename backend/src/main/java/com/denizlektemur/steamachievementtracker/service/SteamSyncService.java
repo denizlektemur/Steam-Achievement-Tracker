@@ -19,6 +19,8 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
+import java.util.Map;
 
 @Slf4j
 @Service
@@ -77,39 +79,58 @@ public class SteamSyncService {
         Game game = gameRepository.findById(gameId)
                 .orElseThrow(() -> new ResourceNotFoundException("Game not found with id: " + gameId));
 
-        List<SteamAchievementDto> steamAchievements =
-                steamApiClient.getPlayerAchievements(user.getSteamId(), game.getAppId());
-
-        if (steamAchievements.isEmpty()) {
-            log.info("No achievements found for game {}", game.getTitle());
+        // Get full achievement definitions from schema
+        List<SteamAchievementDto> schema = steamApiClient.getGameSchema(game.getAppId());
+        if (schema.isEmpty()) {
+            log.info("No schema found for game {}", game.getTitle());
             return 0;
         }
 
-        int synced = 0;
-        for (SteamAchievementDto dto : steamAchievements) {
-            // Upsert achievement definition
-            Achievement achievement = achievementRepository
-                    .findByGameIdAndApiName(gameId, dto.apiName())
-                    .orElseGet(() -> achievementRepository.save(
-                            Achievement.builder()
-                                    .game(game)
-                                    .apiName(dto.apiName())
-                                    .displayName(dto.name())
-                                    .description(dto.description())
-                                    .build()
-                    ));
+        // Get player's unlock status
+        List<SteamAchievementDto> playerAchievements =
+                steamApiClient.getPlayerAchievements(user.getSteamId(), game.getAppId());
 
-            // If unlocked and not already recorded, save it
-            if (dto.achieved() == 1) {
+        // Build a map of apiName -> unlock info for quick lookup
+        Map<String, SteamAchievementDto> unlockMap = playerAchievements.stream()
+                .collect(Collectors.toMap(
+                        SteamAchievementDto::resolvedApiName,
+                        dto -> dto,
+                        (a, b) -> a
+                ));
+
+        int synced = 0;
+
+        for (SteamAchievementDto schemaDef : schema) {
+            String apiName = schemaDef.resolvedApiName();
+            if (apiName == null || apiName.isBlank()) continue;
+
+            // Upsert achievement definition with full info from schema
+            Achievement achievement = achievementRepository
+                    .findByGameIdAndApiName(gameId, apiName)
+                    .orElseGet(() -> Achievement.builder()
+                            .game(game)
+                            .apiName(apiName)
+                            .build());
+
+            // Always update with latest schema data
+            achievement.setDisplayName(schemaDef.resolvedName());
+            achievement.setDescription(schemaDef.description());
+            achievement.setIconUrl(schemaDef.icon());
+            achievementRepository.save(achievement);
+
+            // Check if player has unlocked it
+            SteamAchievementDto playerData = unlockMap.get(apiName);
+            if (playerData != null && playerData.achieved() != null && playerData.achieved() == 1) {
                 boolean alreadyRecorded = userAchievementRepository
                         .findByUserId(userId)
                         .stream()
                         .anyMatch(ua -> ua.getAchievement().getId().equals(achievement.getId()));
 
                 if (!alreadyRecorded) {
-                    LocalDateTime unlockedAt = dto.unlockTime() > 0
+                    LocalDateTime unlockedAt = playerData.unlockTime() != null && playerData.unlockTime() > 0
                             ? LocalDateTime.ofInstant(
-                            Instant.ofEpochSecond(dto.unlockTime()), ZoneId.systemDefault())
+                            Instant.ofEpochSecond(playerData.unlockTime()),
+                            ZoneId.systemDefault())
                             : LocalDateTime.now();
 
                     userAchievementRepository.save(
@@ -125,10 +146,14 @@ public class SteamSyncService {
             }
         }
 
+        // Stamp sync time
+        userGameRepository.findByUserIdAndGameId(userId, gameId)
+                .ifPresent(userGameRepository::save);
+
         log.info("Synced {} new unlocks for {} in {}", synced, user.getUsername(), game.getTitle());
         return synced;
     }
-
+    
     public SyncResult syncAll(Long userId) {
         log.info("Starting full sync for user {}", userId);
 

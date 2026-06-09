@@ -57,6 +57,34 @@ public class SteamApiClient {
         }
     }
 
+    public List<SteamAchievementDto> getGameSchema(Integer appId) {
+        try {
+            GameSchemaResponse response = steamRestClient.get()
+                    .uri("/ISteamUserStats/GetSchemaForGame/v2/?key={key}&appid={appId}",
+                            apiKey, appId)
+                    .retrieve()
+                    .body(GameSchemaResponse.class);
+
+            if (response == null || response.game() == null
+                    || response.game().availableGameStats() == null
+                    || response.game().availableGameStats().achievements() == null) {
+                return Collections.emptyList();
+            }
+            return response.game().availableGameStats().achievements();
+        } catch (Exception e) {
+            return Collections.emptyList();
+        }
+    }
+
+    private record GameSchemaResponse(
+            @JsonProperty("game") GameSchemaInner game) {}
+
+    private record GameSchemaInner(
+            @JsonProperty("availableGameStats") GameStatsInner availableGameStats) {}
+
+    private record GameStatsInner(
+            @JsonProperty("achievements") List<SteamAchievementDto> achievements) {}
+
     // ── Internal response wrappers ────────────────────────────────────────────
 
     private record OwnedGamesResponse(

@@ -53,4 +53,11 @@ public class UserGameController {
         userGameService.removeGameFromUser(userId, gameId);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/{gameId}")
+    public UserGame getUserGame(
+            @PathVariable Long userId,
+            @PathVariable Long gameId) {
+        return userGameService.getUserGameByIds(userId, gameId);
+    }
 }

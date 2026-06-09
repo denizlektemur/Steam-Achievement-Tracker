@@ -58,4 +58,10 @@ public class UserGameService {
 
         userGameRepository.delete(userGame);
     }
+
+    public UserGame getUserGameByIds(Long userId, Long gameId) {
+        return userGameRepository.findByUserIdAndGameId(userId, gameId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "No library entry found for this user and game"));
+    }
 }
