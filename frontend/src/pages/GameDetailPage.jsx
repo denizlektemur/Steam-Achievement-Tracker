@@ -107,12 +107,23 @@ export default function GameDetailPage() {
                     </div>
                     <div className="game-hero-info">
                         <h1 className="game-hero-title">{game?.title}</h1>
+                        <div className="game-hero-meta">
                         <span
-                            className="game-hero-status"
-                            style={{ color: STATUS_COLORS[userGame?.status] }}
-                        >
+                        className="game-hero-status"
+                        style={{ color: STATUS_COLORS[userGame?.status] }}
+                         >
                         {userGame?.status?.replace('_', ' ')}
-                         </span>
+                        </span>
+                            {userGame?.lastPlayedAt && (
+                                <span className="game-hero-last-played">
+                                    🕐 Last played {new Date(userGame.lastPlayedAt).toLocaleDateString('en-GB', {
+                                    day: 'numeric',
+                                    month: 'long',
+                                    year: 'numeric'
+                                })}
+                                 </span>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>
