@@ -23,4 +23,5 @@ public class Achievement {
     private String displayName;
     private String description;
     private String iconUrl;
+    private Double globalPercentage;
 }

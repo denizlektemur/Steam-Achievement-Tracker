@@ -10,6 +10,8 @@ import org.springframework.web.client.RestClient;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -75,6 +77,40 @@ public class SteamApiClient {
             return Collections.emptyList();
         }
     }
+
+    public Map<String, Double> getGlobalAchievementPercentages(Integer appId) {
+        try {
+            GlobalAchievementResponse response = steamRestClient.get()
+                    .uri("/ISteamUserStats/GetGlobalAchievementPercentagesForApp/v2/?gameid={appId}",
+                            appId)
+                    .retrieve()
+                    .body(GlobalAchievementResponse.class);
+
+            if (response == null || response.achievementpercentages() == null
+                    || response.achievementpercentages().achievements() == null) {
+                return Collections.emptyMap();
+            }
+
+            return response.achievementpercentages().achievements().stream()
+                    .collect(Collectors.toMap(
+                            GlobalAchievementDto::name,
+                            GlobalAchievementDto::percent,
+                            (a, b) -> a
+                    ));
+        } catch (Exception e) {
+            return Collections.emptyMap();
+        }
+    }
+
+    private record GlobalAchievementResponse(
+            @JsonProperty("achievementpercentages") GlobalAchievementPercentages achievementpercentages) {}
+
+    private record GlobalAchievementPercentages(
+            @JsonProperty("achievements") List<GlobalAchievementDto> achievements) {}
+
+    private record GlobalAchievementDto(
+            @JsonProperty("name") String name,
+            @JsonProperty("percent") Double percent) {}
 
     private record GameSchemaResponse(
             @JsonProperty("game") GameSchemaInner game) {}

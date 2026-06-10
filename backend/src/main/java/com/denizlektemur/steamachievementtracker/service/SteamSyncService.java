@@ -96,18 +96,19 @@ public class SteamSyncService {
         Game game = gameRepository.findById(gameId)
                 .orElseThrow(() -> new ResourceNotFoundException("Game not found with id: " + gameId));
 
-        // Get full achievement definitions from schema
         List<SteamAchievementDto> schema = steamApiClient.getGameSchema(game.getAppId());
         if (schema.isEmpty()) {
             log.info("No schema found for game {}", game.getTitle());
             return 0;
         }
 
-        // Get player's unlock status
         List<SteamAchievementDto> playerAchievements =
                 steamApiClient.getPlayerAchievements(user.getSteamId(), game.getAppId());
 
-        // Build a map of apiName -> unlock info for quick lookup
+        // Fetch global percentages
+        Map<String, Double> globalPercentages =
+                steamApiClient.getGlobalAchievementPercentages(game.getAppId());
+
         Map<String, SteamAchievementDto> unlockMap = playerAchievements.stream()
                 .collect(Collectors.toMap(
                         SteamAchievementDto::resolvedApiName,
@@ -121,7 +122,6 @@ public class SteamSyncService {
             String apiName = schemaDef.resolvedApiName();
             if (apiName == null || apiName.isBlank()) continue;
 
-            // Upsert achievement definition with full info from schema
             Achievement achievement = achievementRepository
                     .findByGameIdAndApiName(gameId, apiName)
                     .orElseGet(() -> Achievement.builder()
@@ -129,13 +129,12 @@ public class SteamSyncService {
                             .apiName(apiName)
                             .build());
 
-            // Always update with latest schema data
             achievement.setDisplayName(schemaDef.resolvedName());
             achievement.setDescription(schemaDef.description());
             achievement.setIconUrl(schemaDef.icon());
+            achievement.setGlobalPercentage(globalPercentages.getOrDefault(apiName, null));
             achievementRepository.save(achievement);
 
-            // Check if player has unlocked it
             SteamAchievementDto playerData = unlockMap.get(apiName);
             if (playerData != null && playerData.achieved() != null && playerData.achieved() == 1) {
                 boolean alreadyRecorded = userAchievementRepository
@@ -162,10 +161,6 @@ public class SteamSyncService {
                 }
             }
         }
-
-        // Stamp sync time
-        userGameRepository.findByUserIdAndGameId(userId, gameId)
-                .ifPresent(userGameRepository::save);
 
         log.info("Synced {} new unlocks for {} in {}", synced, user.getUsername(), game.getTitle());
         return synced;

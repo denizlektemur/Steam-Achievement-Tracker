@@ -16,6 +16,22 @@ const STATUS_COLORS = {
     IGNORED: '#888'
 }
 
+function getRarityClass(percent) {
+    if (percent <= 5) return 'rarity-legendary'
+    if (percent <= 15) return 'rarity-epic'
+    if (percent <= 35) return 'rarity-rare'
+    if (percent <= 60) return 'rarity-uncommon'
+    return 'rarity-common'
+}
+
+function getRarityLabel(percent) {
+    if (percent <= 5) return 'Legendary'
+    if (percent <= 15) return 'Epic'
+    if (percent <= 35) return 'Rare'
+    if (percent <= 60) return 'Uncommon'
+    return 'Common'
+}
+
 export default function GameDetailPage() {
     const { gameId } = useParams()
     const navigate = useNavigate()
@@ -50,12 +66,16 @@ export default function GameDetailPage() {
             unlockedAt: unlockedMap[ach.id] || null
         }))
 
-        // Sort — unlocked first
+        // Sort: unlocked first, then by global percentage ascending (rarest last)
         merged.sort((a, b) => {
             if (a.unlockedAt && !b.unlockedAt) return -1
             if (!a.unlockedAt && b.unlockedAt) return 1
-            return 0
+            const aP = a.achievement?.globalPercentage ?? 101
+            const bP = b.achievement?.globalPercentage ?? 101
+            return aP - bP
         })
+
+        setAchievements(merged)
 
         setAchievements(merged)
         setLoading(false)
@@ -181,23 +201,28 @@ export default function GameDetailPage() {
                         <div key={ua.id} className={`achievement-item ${ua.unlockedAt ? 'unlocked' : 'locked'}`}>
                             <img
                                 className="achievement-icon"
-                                src={ua.achievement?.iconUrl || `https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/${game?.appId}/default.jpg`}
+                                src={ua.achievement?.iconUrl || ''}
                                 alt={ua.achievement?.displayName}
                                 onError={e => { e.target.style.opacity = '0.3' }}
                             />
                             <div className="achievement-info">
-                <span className="achievement-name">
-                  {ua.achievement?.displayName || ua.achievement?.apiName}
-                </span>
-                                <span className="achievement-desc">
-                  {ua.achievement?.description || 'No description'}
-                </span>
+                                <div className="achievement-name-row">
+                                    <span className="achievement-name">
+                                        {ua.achievement?.displayName || ua.achievement?.apiName}
+                                    </span>
+                                    {ua.achievement?.globalPercentage != null && (
+                                    <span className={`rarity-badge ${getRarityClass(ua.achievement.globalPercentage)}`}>
+                                        {getRarityLabel(ua.achievement.globalPercentage)} · {ua.achievement.globalPercentage.toFixed(1)}%
+                                    </span>
+                                    )}
+                                </div>
+                                    <span className="achievement-desc">
+                                        {ua.achievement?.description || 'No description'}
+                                    </span>
                             </div>
                             <span className={`achievement-unlocked ${ua.unlockedAt ? '' : 'locked-text'}`}>
-                {ua.unlockedAt
-                    ? new Date(ua.unlockedAt).toLocaleDateString()
-                    : 'Locked'}
-              </span>
+                                {ua.unlockedAt ? new Date(ua.unlockedAt).toLocaleDateString() : 'Locked'}
+                            </span>
                         </div>
                     ))
                 )}
