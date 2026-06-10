@@ -97,8 +97,17 @@ public class SteamSyncService {
                 .orElseThrow(() -> new ResourceNotFoundException("Game not found with id: " + gameId));
 
         List<SteamAchievementDto> schema = steamApiClient.getGameSchema(game.getAppId());
+
+        // Handle no achievements — auto ignore before early return
         if (schema.isEmpty()) {
-            log.info("No schema found for game {}", game.getTitle());
+            userGameRepository.findByUserIdAndGameId(userId, gameId).ifPresent(ug -> {
+                if (ug.getStatus() != GameStatus.IGNORED) {
+                    ug.setStatus(GameStatus.IGNORED);
+                    userGameRepository.save(ug);
+                    log.info("Auto-ignoring {} for user {} — no achievements found",
+                            game.getTitle(), user.getUsername());
+                }
+            });
             return 0;
         }
 
@@ -167,29 +176,31 @@ public class SteamSyncService {
             int total = achievementRepository.countByGameId(gameId);
             int unlocked = userAchievementRepository.countByUserIdAndGameId(userId, gameId);
 
-            if (total > 0) {
+            if (total == 0 && ug.getStatus() != GameStatus.IGNORED) {
+                // No achievements — auto ignore
+                ug.setStatus(GameStatus.IGNORED);
+                log.info("Auto-ignoring {} for user {} — no achievements",
+                        game.getTitle(), user.getUsername());
+            } else if (total > 0 && ug.getStatus() != GameStatus.IGNORED) {
                 GameStatus currentStatus = ug.getStatus();
                 GameStatus newStatus = currentStatus;
 
                 if (unlocked == total) {
-                    // All achievements unlocked — mark as completed
                     if (currentStatus != GameStatus.COMPLETED) {
                         newStatus = GameStatus.COMPLETED;
                         log.info("Auto-completing {} for user {} ({}/{})",
                                 game.getTitle(), user.getUsername(), unlocked, total);
                     }
                 } else if (currentStatus == GameStatus.COMPLETED && unlocked < total) {
-                    // Was completed but new achievements were added — move back to backlog
                     newStatus = GameStatus.BACKLOG;
                     log.info("Reverting {} to backlog for user {} — new achievements added ({}/{})",
                             game.getTitle(), user.getUsername(), unlocked, total);
                 }
 
                 ug.setStatus(newStatus);
-                userGameRepository.save(ug);
-            } else {
-                userGameRepository.save(ug);
             }
+
+            userGameRepository.save(ug);
         });
 
         log.info("Synced {} new unlocks for {} in {}", synced, user.getUsername(), game.getTitle());
