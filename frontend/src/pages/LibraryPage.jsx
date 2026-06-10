@@ -107,6 +107,19 @@ export default function LibraryPage() {
         return () => document.removeEventListener('mousedown', handleClickOutside)
     }, [])
 
+    useEffect(() => {
+        if (!loading) {
+            const savedScroll = sessionStorage.getItem('libraryScrollY')
+            if (savedScroll) {
+                // Small timeout to let the grid render first
+                setTimeout(() => {
+                    window.scrollTo({ top: parseInt(savedScroll), behavior: 'instant' })
+                    sessionStorage.removeItem('libraryScrollY')
+                }, 50)
+            }
+        }
+    }, [loading])
+
     const handleStatusSelect = async (status) => {
         setActiveStatus(status)
         setSearch('')

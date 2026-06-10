@@ -46,7 +46,10 @@ export default function GameCard({ userGame, showProgress, onStatusChange }) {
     }
 
     const handleClick = () => {
-        if (!menuOpen) navigate(`/game/${userGame.gameId}`)
+        if (!menuOpen) {
+            sessionStorage.setItem('libraryScrollY', window.scrollY)
+            navigate(`/game/${userGame.gameId}`)
+        }
     }
 
     return (
