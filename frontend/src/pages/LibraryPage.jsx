@@ -101,12 +101,21 @@ export default function LibraryPage() {
     }
 
     const handleStatusChange = (userGameId, newStatus) => {
-        // Update both allGames and filtered instantly without refetching
-        const update = games => games.map(g =>
+        // Update allGames
+        setAllGames(prev => prev.map(g =>
             g.id === userGameId ? { ...g, status: newStatus } : g
-        )
-        setAllGames(update)
-        setFiltered(update)
+        ))
+
+        // Update filtered — if a status filter is active, remove the game if it no longer matches
+        setFiltered(prev => {
+            const updated = prev.map(g =>
+                g.id === userGameId ? { ...g, status: newStatus } : g
+            )
+            if (activeStatus !== null) {
+                return updated.filter(g => g.status === activeStatus)
+            }
+            return updated
+        })
     }
 
     const currentSortLabel = SORT_OPTIONS.find(o => o.value === sortBy)?.label
