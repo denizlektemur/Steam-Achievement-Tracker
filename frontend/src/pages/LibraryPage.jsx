@@ -100,6 +100,15 @@ export default function LibraryPage() {
         setFiltered(sortGames(searched, sortBy, sortDir))
     }
 
+    const handleStatusChange = (userGameId, newStatus) => {
+        // Update both allGames and filtered instantly without refetching
+        const update = games => games.map(g =>
+            g.id === userGameId ? { ...g, status: newStatus } : g
+        )
+        setAllGames(update)
+        setFiltered(update)
+    }
+
     const currentSortLabel = SORT_OPTIONS.find(o => o.value === sortBy)?.label
 
     const counts = {
@@ -169,7 +178,11 @@ export default function LibraryPage() {
                     )}
                 </div>
             </div>
-            <GameGrid games={filtered} showProgress={showProgress} />
+            <GameGrid
+                games={filtered}
+                showProgress={showProgress}
+                onStatusChange={handleStatusChange}
+            />
         </div>
     )
 }

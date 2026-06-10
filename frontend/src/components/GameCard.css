@@ -14,6 +14,11 @@
     z-index: 1;
 }
 
+.game-card.updating {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
 .game-card img {
     width: 100%;
     height: 100%;
@@ -21,7 +26,6 @@
     display: block;
 }
 
-/* Grey overlay sits at the top, height = incomplete percentage */
 .completion-overlay {
     position: absolute;
     top: 0;
@@ -33,7 +37,6 @@
     transition: height 0.3s ease;
 }
 
-/* Small % badge in the corner */
 .completion-badge {
     position: absolute;
     top: 6px;
@@ -90,3 +93,82 @@
 .status-in_progress { color: #66c0f4; }
 .status-completed { color: #4caf7d; }
 .status-ignored { color: #888; }
+
+.card-updating {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,0.5);
+    color: #fff;
+    font-size: 0.85rem;
+}
+
+/* Context menu */
+.context-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 99;
+}
+
+.context-menu {
+    position: fixed;
+    z-index: 100;
+    background-color: #1b2838;
+    border: 1px solid #4c6b8a;
+    border-radius: 4px;
+    overflow: hidden;
+    min-width: 180px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+}
+
+.context-menu-title {
+    padding: 0.5rem 1rem;
+    font-size: 0.75rem;
+    color: #8ba7b8;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-bottom: 1px solid #2a475e;
+}
+
+.context-option {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    width: 100%;
+    padding: 0.6rem 1rem;
+    font-size: 0.85rem;
+    color: #c6d4df;
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: background 0.15s;
+    text-align: left;
+}
+
+.context-option:hover {
+    background-color: #2a475e;
+}
+
+.context-option.active {
+    color: #fff;
+}
+
+.context-check {
+    margin-left: auto;
+    color: #4caf7d;
+    font-size: 0.8rem;
+}
+
+.context-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.status-dot-backlog { background-color: #8ba7b8; }
+.status-dot-in_progress { background-color: #66c0f4; }
+.status-dot-completed { background-color: #4caf7d; }
+.status-dot-ignored { background-color: #888; }
