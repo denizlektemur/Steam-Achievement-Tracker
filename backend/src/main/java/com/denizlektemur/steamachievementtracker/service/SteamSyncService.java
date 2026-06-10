@@ -162,6 +162,36 @@ public class SteamSyncService {
             }
         }
 
+        // Auto-update game status based on completion
+        userGameRepository.findByUserIdAndGameId(userId, gameId).ifPresent(ug -> {
+            int total = achievementRepository.countByGameId(gameId);
+            int unlocked = userAchievementRepository.countByUserIdAndGameId(userId, gameId);
+
+            if (total > 0) {
+                GameStatus currentStatus = ug.getStatus();
+                GameStatus newStatus = currentStatus;
+
+                if (unlocked == total) {
+                    // All achievements unlocked — mark as completed
+                    if (currentStatus != GameStatus.COMPLETED) {
+                        newStatus = GameStatus.COMPLETED;
+                        log.info("Auto-completing {} for user {} ({}/{})",
+                                game.getTitle(), user.getUsername(), unlocked, total);
+                    }
+                } else if (currentStatus == GameStatus.COMPLETED && unlocked < total) {
+                    // Was completed but new achievements were added — move back to backlog
+                    newStatus = GameStatus.BACKLOG;
+                    log.info("Reverting {} to backlog for user {} — new achievements added ({}/{})",
+                            game.getTitle(), user.getUsername(), unlocked, total);
+                }
+
+                ug.setStatus(newStatus);
+                userGameRepository.save(ug);
+            } else {
+                userGameRepository.save(ug);
+            }
+        });
+
         log.info("Synced {} new unlocks for {} in {}", synced, user.getUsername(), game.getTitle());
         return synced;
     }
