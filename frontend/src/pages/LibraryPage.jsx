@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { getUserGames, getUserGamesByStatus } from '../api/api'
 import StatusCards from '../components/StatusCards'
 import GameGrid from '../components/GameGrid'
@@ -12,23 +13,21 @@ const SORT_OPTIONS = [
 
 function sortGames(games, sortBy, sortDir) {
     return [...games].sort((a, b) => {
-        let aVal, bVal
-
         if (sortBy === 'title') {
-            aVal = a.title.toLowerCase()
-            bVal = b.title.toLowerCase()
+            const aVal = a.title.toLowerCase()
+            const bVal = b.title.toLowerCase()
             return sortDir === 'asc'
                 ? aVal.localeCompare(bVal)
                 : bVal.localeCompare(aVal)
         }
 
+        let aVal, bVal
+
         if (sortBy === 'percentage') {
             aVal = a.totalAchievements > 0
-                ? a.unlockedAchievements / a.totalAchievements
-                : -1
+                ? a.unlockedAchievements / a.totalAchievements : -1
             bVal = b.totalAchievements > 0
-                ? b.unlockedAchievements / b.totalAchievements
-                : -1
+                ? b.unlockedAchievements / b.totalAchievements : -1
         }
 
         if (sortBy === 'lastPlayedAt') {
@@ -41,22 +40,55 @@ function sortGames(games, sortBy, sortDir) {
 }
 
 export default function LibraryPage() {
-    // ← all hooks must be here, inside the function
+    const [searchParams, setSearchParams] = useSearchParams()
+
+    // Read initial state from URL params
+    const initialStatus = searchParams.get('status') || null
+    const initialSort = searchParams.get('sort') || 'title'
+    const initialDir = searchParams.get('dir') || 'asc'
+    const initialSearch = searchParams.get('search') || ''
+
     const [allGames, setAllGames] = useState([])
     const [filtered, setFiltered] = useState([])
-    const [activeStatus, setActiveStatus] = useState(null)
+    const [activeStatus, setActiveStatus] = useState(initialStatus)
     const [loading, setLoading] = useState(true)
     const [showProgress, setShowProgress] = useState(true)
-    const [search, setSearch] = useState('')
-    const [sortBy, setSortBy] = useState('title')
-    const [sortDir, setSortDir] = useState('asc')
+    const [search, setSearch] = useState(initialSearch)
+    const [sortBy, setSortBy] = useState(initialSort)
+    const [sortDir, setSortDir] = useState(initialDir)
     const [sortOpen, setSortOpen] = useState(false)
-    const sortRef = useRef(null)  // ← must be inside here
+    const sortRef = useRef(null)
+
+    // Update URL when filters change
+    const updateParams = (updates) => {
+        setSearchParams(prev => {
+            const next = new URLSearchParams(prev)
+            Object.entries(updates).forEach(([key, value]) => {
+                if (value === null || value === '') {
+                    next.delete(key)
+                } else {
+                    next.set(key, value)
+                }
+            })
+            return next
+        }, { replace: true })
+    }
 
     useEffect(() => {
         getUserGames().then(res => {
             setAllGames(res.data)
-            setFiltered(res.data)
+
+            // Apply initial filters from URL
+            let base = res.data
+            if (initialStatus) {
+                base = base.filter(g => g.status === initialStatus)
+            }
+            if (initialSearch) {
+                base = base.filter(g =>
+                    g.title.toLowerCase().includes(initialSearch.toLowerCase())
+                )
+            }
+            setFiltered(sortGames(base, initialSort, initialDir))
             setLoading(false)
         })
     }, [])
@@ -78,6 +110,8 @@ export default function LibraryPage() {
     const handleStatusSelect = async (status) => {
         setActiveStatus(status)
         setSearch('')
+        updateParams({ status, search: null })
+
         let base
         if (status === null) {
             base = allGames
@@ -91,6 +125,8 @@ export default function LibraryPage() {
     const handleSearch = (e) => {
         const value = e.target.value
         setSearch(value)
+        updateParams({ search: value })
+
         const base = activeStatus === null
             ? allGames
             : allGames.filter(g => g.status === activeStatus)
@@ -100,13 +136,22 @@ export default function LibraryPage() {
         setFiltered(sortGames(searched, sortBy, sortDir))
     }
 
+    const handleSortBy = (value) => {
+        setSortBy(value)
+        updateParams({ sort: value })
+        setSortOpen(false)
+    }
+
+    const handleSortDir = () => {
+        const newDir = sortDir === 'asc' ? 'desc' : 'asc'
+        setSortDir(newDir)
+        updateParams({ dir: newDir })
+    }
+
     const handleStatusChange = (userGameId, newStatus) => {
-        // Update allGames
         setAllGames(prev => prev.map(g =>
             g.id === userGameId ? { ...g, status: newStatus } : g
         ))
-
-        // Update filtered — if a status filter is active, remove the game if it no longer matches
         setFiltered(prev => {
             const updated = prev.map(g =>
                 g.id === userGameId ? { ...g, status: newStatus } : g
@@ -158,10 +203,7 @@ export default function LibraryPage() {
                     >
                         Sort: {currentSortLabel}
                     </button>
-                    <button
-                        className="sort-dir-btn"
-                        onClick={() => setSortDir(d => d === 'asc' ? 'desc' : 'asc')}
-                    >
+                    <button className="sort-dir-btn" onClick={handleSortDir}>
                         {sortDir === 'asc' ? '↑' : '↓'}
                     </button>
                     {sortOpen && (
@@ -170,10 +212,7 @@ export default function LibraryPage() {
                                 <button
                                     key={o.value}
                                     className={`sort-option ${sortBy === o.value ? 'active' : ''}`}
-                                    onClick={() => {
-                                        setSortBy(o.value)
-                                        setSortOpen(false)
-                                    }}
+                                    onClick={() => handleSortBy(o.value)}
                                 >
                                     {o.label}
                                     {sortBy === o.value && (

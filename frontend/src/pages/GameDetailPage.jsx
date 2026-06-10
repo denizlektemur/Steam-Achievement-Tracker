@@ -121,7 +121,7 @@ export default function GameDetailPage() {
             <div className="game-hero" style={heroStyle}>
                 <div className="game-hero-overlay">
                     <div className="game-hero-top">
-                        <button className="back-btn" onClick={() => navigate('/')}>
+                        <button className="back-btn" onClick={() => navigate(-1)}>
                             ← Back to Library
                         </button>
                     </div>
